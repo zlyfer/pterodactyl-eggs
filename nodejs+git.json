@@ -1,0 +1,58 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2024-08-02T17:29:06+02:00",
+    "name": "NodeJS + GIT",
+    "author": "zlyfer@pm.me",
+    "description": "Run any Node.JS project with GIT support.",
+    "features": null,
+    "docker_images": {
+        "Node v20": "ghcr.io\/pterodactyl\/yolks:nodejs_20",
+        "Node v18": "ghcr.io\/pterodactyl\/yolks:nodejs_18",
+        "Node v16": "ghcr.io\/pterodactyl\/yolks:nodejs_16",
+        "Node v14": "ghcr.io\/pterodactyl\/yolks:nodejs_14",
+        "Node v12": "ghcr.io\/pterodactyl\/yolks:nodejs_12",
+        "Node v17": "ghcr.io\/pterodactyl\/yolks:nodejs_17",
+        "Node v15": "ghcr.io\/pterodactyl\/yolks:nodejs_15"
+    },
+    "file_denylist": [],
+    "startup": "node ${JS_FILE}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Bot is ready.\"\r\n}",
+        "logs": "{}",
+        "stop": "^c"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\napt update\r\napt install -y git curl npm\r\ncd \/mnt\/server\r\ngit config --global --add safe.directory \/mnt\/server\r\nif [ ! -d .git ]; then git clone ${GIT_REPO} .; else git pull; fi\r\nnpm install\r\n\r\necho 'originalLog = console.log;\r\noriginalError = console.error;\r\n\r\nconsole.log = (message) => {\r\n    message = genTime() + message;\r\n    originalLog(message);\r\n};\r\n\r\nconsole.error = (message) => {\r\n    message = genTime() + message;\r\n    originalError(message);\r\n};\r\n\r\ngenTime = () => {\r\n    let date = new Date();\r\n    let hours = date.getHours();\r\n    let minutes = date.getMinutes();\r\n    let seconds = date.getSeconds();\r\n    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} `;\r\n}' > wrapper.js",
+            "container": "debian:buster-slim",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Git Repository URL",
+            "description": "URL of the Git repository to clone.",
+            "env_variable": "GIT_REPO",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Entrypoint",
+            "description": "The file to run when starting the server.",
+            "env_variable": "JS_FILE",
+            "default_value": "index.js",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        }
+    ]
+}
