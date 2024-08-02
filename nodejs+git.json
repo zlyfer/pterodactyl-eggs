@@ -5,7 +5,7 @@
     "update_url": null
   },
   "exported_at": "2024-08-02T18:27:21+02:00",
-  "name": "NodeJS + GIT test2",
+  "name": "NodeJS + GIT",
   "author": "zlyfer@pm.me",
   "description": "Run any Node.JS project with GIT support.",
   "features": null,
