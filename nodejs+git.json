@@ -1,58 +1,78 @@
 {
-    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
-    "meta": {
-        "version": "PTDL_v2",
-        "update_url": null
+  "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "exported_at": "2024-08-02T18:27:21+02:00",
+  "name": "NodeJS + GIT",
+  "author": "zlyfer@pm.me",
+  "description": "Run any Node.JS project with GIT support.",
+  "features": null,
+  "docker_images": {
+    "Node v20": "ghcr.io/pterodactyl/yolks:nodejs_20",
+    "Node v18": "ghcr.io/pterodactyl/yolks:nodejs_18",
+    "Node v16": "ghcr.io/pterodactyl/yolks:nodejs_16",
+    "Node v14": "ghcr.io/pterodactyl/yolks:nodejs_14",
+    "Node v12": "ghcr.io/pterodactyl/yolks:nodejs_12",
+    "Node v17": "ghcr.io/pterodactyl/yolks:nodejs_17",
+    "Node v15": "ghcr.io/pterodactyl/yolks:nodejs_15"
+  },
+  "file_denylist": [],
+  "startup": "node wrapper.js",
+  "config": {
+    "files": "{}",
+    "startup": "{\r\n    \"done\": \"Bot is ready.\"\r\n}",
+    "logs": "{}",
+    "stop": "^c"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/bash\r\napt update\r\napt install -y git curl npm\r\ncd /mnt/server\r\ngit config --global --add safe.directory /mnt/server\r\nif [ ! -d .git ]; then git clone ${GIT_REPO} .; else git pull; fi\r\nnpm install\r\n\r\necho 'if (process.env.LOG_TIMESTAMP == 1) {\r\n  function genTime() {\r\n    let date = new Date();\r\n    let hours = date.getHours();\r\n    let minutes = date.getMinutes();\r\n    let seconds = date.getSeconds();\r\n    return `${hours.toString().padStart(2, 0)}:${minutes.toString().padStart(2, 0)}:${seconds\r\n      .toString()\r\n      .padStart(2, 0)} `;\r\n  }\r\n\r\n  originalLog = console.log;\r\n  originalError = console.error;\r\n\r\n  console.log = (message) => {\r\n    message = genTime() + message;\r\n    originalLog(message);\r\n  };\r\n\r\n  console.error = (message) => {\r\n    message = genTime() + message;\r\n    originalError(message);\r\n  };\r\n}\r\n\r\nif (process.env.AUTO_UPDATE == 1) {\r\n  const { exec } = require(\"child_process\");\r\n\r\n  function executeCommand(command, callback) {\r\n    exec(command, (error, stdout, stderr) => {\r\n      if (error) {\r\n        console.error(`Error executing command: ${error.message}`);\r\n        return;\r\n      }\r\n      if (stderr) {\r\n        console.error(`stderr: ${stderr}`);\r\n        return;\r\n      }\r\n      console.log(`stdout: ${stdout}`);\r\n      if (callback) callback();\r\n    });\r\n  }\r\n\r\n  executeCommand(`git reset --hard`, () => {\r\n    executeCommand(`git pull`, () => {\r\n      executeCommand(`npm install`, () => {\r\n        require(process.env.JS_FILE);\r\n      });\r\n    });\r\n  });\r\n} else {\r\n  require(process.env.JS_FILE);\r\n}' > wrapper.js",
+      "container": "debian:buster-slim",
+      "entrypoint": "bash"
+    }
+  },
+  "variables": [
+    {
+      "name": "Git Repository URL",
+      "description": "URL of the Git repository to clone.",
+      "env_variable": "GIT_REPO",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
     },
-    "exported_at": "2024-08-02T17:29:06+02:00",
-    "name": "NodeJS + GIT",
-    "author": "zlyfer@pm.me",
-    "description": "Run any Node.JS project with GIT support.",
-    "features": null,
-    "docker_images": {
-        "Node v20": "ghcr.io\/pterodactyl\/yolks:nodejs_20",
-        "Node v18": "ghcr.io\/pterodactyl\/yolks:nodejs_18",
-        "Node v16": "ghcr.io\/pterodactyl\/yolks:nodejs_16",
-        "Node v14": "ghcr.io\/pterodactyl\/yolks:nodejs_14",
-        "Node v12": "ghcr.io\/pterodactyl\/yolks:nodejs_12",
-        "Node v17": "ghcr.io\/pterodactyl\/yolks:nodejs_17",
-        "Node v15": "ghcr.io\/pterodactyl\/yolks:nodejs_15"
+    {
+      "name": "Entrypoint",
+      "description": "The file to run when starting the server.",
+      "env_variable": "JS_FILE",
+      "default_value": "./index.js",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
     },
-    "file_denylist": [],
-    "startup": "node ${JS_FILE}",
-    "config": {
-        "files": "{}",
-        "startup": "{\r\n    \"done\": \"Bot is ready.\"\r\n}",
-        "logs": "{}",
-        "stop": "^c"
+    {
+      "name": "Auto update on start",
+      "description": "Automatically uses 'git reset --hard' & 'git pull' before each start.",
+      "env_variable": "AUTO_UPDATE",
+      "default_value": "1",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|boolean",
+      "field_type": "text"
     },
-    "scripts": {
-        "installation": {
-            "script": "#!\/bin\/bash\r\napt update\r\napt install -y git curl npm\r\ncd \/mnt\/server\r\ngit config --global --add safe.directory \/mnt\/server\r\nif [ ! -d .git ]; then git clone ${GIT_REPO} .; else git pull; fi\r\nnpm install\r\n\r\necho 'originalLog = console.log;\r\noriginalError = console.error;\r\n\r\nconsole.log = (message) => {\r\n    message = genTime() + message;\r\n    originalLog(message);\r\n};\r\n\r\nconsole.error = (message) => {\r\n    message = genTime() + message;\r\n    originalError(message);\r\n};\r\n\r\ngenTime = () => {\r\n    let date = new Date();\r\n    let hours = date.getHours();\r\n    let minutes = date.getMinutes();\r\n    let seconds = date.getSeconds();\r\n    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} `;\r\n}' > wrapper.js",
-            "container": "debian:buster-slim",
-            "entrypoint": "bash"
-        }
-    },
-    "variables": [
-        {
-            "name": "Git Repository URL",
-            "description": "URL of the Git repository to clone.",
-            "env_variable": "GIT_REPO",
-            "default_value": "",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "required|string",
-            "field_type": "text"
-        },
-        {
-            "name": "Entrypoint",
-            "description": "The file to run when starting the server.",
-            "env_variable": "JS_FILE",
-            "default_value": "index.js",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": "required|string",
-            "field_type": "text"
-        }
-    ]
+    {
+      "name": "Add timestamp to log entries",
+      "description": "Whenever the process prints a line to the console this will add a timestamp to it.\r\nExample: \"Hello World\" > \"08:32:10 Hello World\"",
+      "env_variable": "LOG_TIMESTAMP",
+      "default_value": "1",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|boolean",
+      "field_type": "text"
+    }
+  ]
 }
