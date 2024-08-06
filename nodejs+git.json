@@ -4,7 +4,7 @@
     "version": "PTDL_v2",
     "update_url": null
   },
-  "exported_at": "2024-08-02T18:27:21+02:00",
+  "exported_at": "2024-08-06T23:55:28+02:00",
   "name": "NodeJS + GIT",
   "author": "zlyfer@pm.me",
   "description": "Run any Node.JS project with GIT support.",
@@ -28,7 +28,7 @@
   },
   "scripts": {
     "installation": {
-      "script": "#!/bin/bash\r\napt update\r\napt install -y git curl npm\r\ncd /mnt/server\r\ngit config --global --add safe.directory /mnt/server\r\nif [ ! -d .git ]; then git clone ${GIT_REPO} .; else git pull; fi\r\nnpm install\r\n\r\necho 'if (process.env.LOG_TIMESTAMP == 1) {\r\n  function genTime() {\r\n    let date = new Date();\r\n    let hours = date.getHours();\r\n    let minutes = date.getMinutes();\r\n    let seconds = date.getSeconds();\r\n    return `${hours.toString().padStart(2, 0)}:${minutes.toString().padStart(2, 0)}:${seconds\r\n      .toString()\r\n      .padStart(2, 0)} `;\r\n  }\r\n\r\n  originalLog = console.log;\r\n  originalError = console.error;\r\n\r\n  console.log = (message) => {\r\n    message = genTime() + message;\r\n    originalLog(message);\r\n  };\r\n\r\n  console.error = (message) => {\r\n    message = genTime() + message;\r\n    originalError(message);\r\n  };\r\n}\r\n\r\nif (process.env.AUTO_UPDATE == 1) {\r\n  const { exec } = require(\"child_process\");\r\n\r\n  function executeCommand(command, callback) {\r\n    exec(command, (error, stdout, stderr) => {\r\n      if (error) {\r\n        console.error(`Error executing command: ${error.message}`);\r\n        return;\r\n      }\r\n      if (stderr) {\r\n        console.error(stderr);\r\n        return;\r\n      }\r\n      console.log(stdout);\r\n      if (callback) callback();\r\n    });\r\n  }\r\n\r\n  executeCommand(`git reset --hard`, () => {\r\n    executeCommand(`git pull`, () => {\r\n      executeCommand(`npm install`, () => {\r\n        require(process.env.JS_FILE);\r\n      });\r\n    });\r\n  });\r\n} else {\r\n  require(process.env.JS_FILE);\r\n}' > wrapper.js",
+      "script": "#!/bin/bash\r\napt update\r\napt install -y git curl npm\r\ncd /mnt/server\r\ngit config --global --add safe.directory /mnt/server\r\nif [ ! -d .git ]; then git clone ${GIT_REPO} .; else git pull; fi\r\nnpm install\r\n\r\necho 'const fs = require(\"fs\");\r\nconst path = require(\"path\");\r\n\r\nfunction getFormattedDate() {\r\n  const date = new Date();\r\n  const day = date.getDate().toString().padStart(2, \"0\");\r\n  const month = (date.getMonth() + 1).toString().padStart(2, \"0\");\r\n  return `${day}.${month}`;\r\n}\r\n\r\nfunction getFormattedTime() {\r\n  let date = new Date();\r\n  let hours = date.getHours();\r\n  let minutes = date.getMinutes();\r\n  let seconds = date.getSeconds();\r\n  return `[${hours.toString().padStart(2, 0)}:${minutes.toString().padStart(2, 0)}:${seconds\r\n    .toString()\r\n    .padStart(2, 0)}] `;\r\n}\r\n\r\nif (process.env.ENABLE_LOG == 1) {\r\n  const logDir = path.resolve(__dirname, process.env.LOG_LOC);\r\n  if (!fs.existsSync(logDir)) {\r\n    fs.mkdirSync(logDir, { recursive: true });\r\n  }\r\n}\r\n\r\nif (process.env.LOG_TIMESTAMP == 1) {\r\n  originalLog = console.log;\r\n  originalError = console.error;\r\n\r\n  console.log = (message) => {\r\n    message = getFormattedTime() + message;\r\n    originalLog(message);\r\n    if (process.env.ENABLE_LOG == 1) {\r\n      const formattedDate = getFormattedDate();\r\n      const logFilePath = path.resolve(__dirname, process.env.LOG_LOC, `log_${formattedDate}.log`);\r\n      fs.appendFileSync(logFilePath, message + \"\\n\");\r\n    }\r\n  };\r\n\r\n  console.error = (message) => {\r\n    message = getFormattedTime() + message;\r\n    originalError(message);\r\n    if (process.env.ENABLE_LOG == 1) {\r\n      const formattedDate = getFormattedDate();\r\n      const errorLogFilePath = path.resolve(\r\n        __dirname,\r\n        process.env.LOG_LOC,\r\n        `error_${formattedDate}.log`\r\n      );\r\n      fs.appendFileSync(errorLogFilePath, message + \"\\n\");\r\n    }\r\n  };\r\n}\r\n\r\nif (process.env.AUTO_UPDATE == 1) {\r\n  const { exec } = require(\"child_process\");\r\n\r\n  function executeCommand(command, callback) {\r\n    exec(command, (error, stdout, stderr) => {\r\n      if (error) {\r\n        console.error(`Error executing command: ${error.message}`);\r\n        return;\r\n      }\r\n      if (stderr) {\r\n        console.error(stderr);\r\n        return;\r\n      }\r\n      console.log(stdout);\r\n      if (callback) callback();\r\n    });\r\n  }\r\n\r\n  executeCommand(`git reset --hard`, () => {\r\n    executeCommand(`git pull`, () => {\r\n      executeCommand(`npm install`, () => {\r\n        require(process.env.JS_FILE);\r\n      });\r\n    });\r\n  });\r\n} else {\r\n  require(process.env.JS_FILE);\r\n}' > wrapper.js",
       "container": "debian:buster-slim",
       "entrypoint": "bash"
     }
@@ -72,6 +72,26 @@
       "user_viewable": true,
       "user_editable": true,
       "rules": "required|boolean",
+      "field_type": "text"
+    },
+    {
+      "name": "Log to file",
+      "description": "Save every output message to log files.",
+      "env_variable": "ENABLE_LOG",
+      "default_value": "0",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|boolean",
+      "field_type": "text"
+    },
+    {
+      "name": "Log location",
+      "description": "The directory the log files should be saved to. Needs ENABLE_LOG to be true.",
+      "env_variable": "LOG_LOC",
+      "default_value": "logs",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:20",
       "field_type": "text"
     }
   ]
